@@ -1,20 +1,21 @@
 const express = require('express');
 const querystring = require('querystring');
 const cors = require('cors');
+const path = require('path');
+
 require('dotenv').config()
 
-
-
-
-
+const port = process.env.PORT || 8888;
 const client_id = process.env.CLIENT_ID;
-console.log(client_id)
+
 const redirect_uri = 'http://localhost:8888/callback/';
 
 
 const app = express();
 app.use(cors());
+app.use(express.static(path.join(__dirname, '/client/build')));
 
+   
 
 
 
@@ -35,8 +36,13 @@ app.get('/callback', function (req,res){
         console.log('in callback')
 
 
-         res.redirect('http://localhost:3000');
+         res.redirect('http://localhost:8888');
         
 });
-console.log('listening on port 8888')
+
+
+app.get('*', function (req, res) {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+   });
+console.log(`listening on port ${port}`)
 app.listen(8888);
