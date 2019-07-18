@@ -8,7 +8,7 @@ require('dotenv').config()
 const port = process.env.PORT || 8888;
 const client_id = process.env.CLIENT_ID;
 
-const redirect_uri = 'http://localhost:8888/callback/';
+const redirect_uri = "https://git.heroku.com/playlist-builder-spotify.git/callback/"//'http://localhost:8888/callback/';
 
 
 const app = express();
@@ -36,7 +36,7 @@ app.get('/callback', function (req,res){
         console.log('in callback')
 
 
-         res.redirect('http://localhost:8888');
+         res.redirect('https://git.heroku.com/playlist-builder-spotify.git');
         
 });
 
@@ -45,4 +45,4 @@ app.get('*', function (req, res) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
    });
 console.log(`listening on port ${port}`)
-app.listen(8888);
+app.listen(port);
