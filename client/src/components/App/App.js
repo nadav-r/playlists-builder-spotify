@@ -23,7 +23,7 @@ function App() {
     <div className="app_title">
       <h1 >Playlist Builder</h1>
       <Button
-        href="https://git.heroku.com/playlist-builder-spotify.git/login"//'http://localhost:8888/login'
+        href="https://playlist-builder-spotify.herokuapp.com/login"//'http://localhost:8888/login'
         variant="success"
         style={{ 'marginTop': '20px' }}>Login
       </Button>
