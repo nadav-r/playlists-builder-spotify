@@ -8,6 +8,9 @@ import NewPlaylist from './NewPlaylist/NewPlaylist';
 import ListGroup from 'react-bootstrap/ListGroup'
 import '../../App/App.css'
 import Button from 'react-bootstrap/Button';
+import SpotifyWebApi from 'spotify-web-api-js';
+
+const spotifyWebApi = new SpotifyWebApi()
 
 class LoggedIn extends Component {
     state = {
@@ -22,29 +25,22 @@ class LoggedIn extends Component {
     }
 
     getUserProfile = () => {
-        fetch('https://api.spotify.com/v1/me', {
-            headers: {
-                'Authorization': 'Bearer ' + this.props.accessToken
-            }
-        })
-            .then(res => res.json())
-            .then(res => this.setState({
-                name: res.display_name,
-                userId: res.id
-            }))
-            .catch(error => console.log('error occured'));
+        spotifyWebApi.getMe()
+            .then(
+                res => {
+                    this.setState({
+                        name: res.display_name,
+                        userId: res.id
+                    })
+                }
+            )
+            .catch(error => console.log('an error has occured'))
     }
 
     getUserPlaylists = () => {
-        fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-            headers: {
-                'Authorization': 'Bearer ' + this.props.accessToken
-            }
-        })
-            .then(res => res.json())
+        spotifyWebApi.getUserPlaylists()
             .then(res => {
                 let playlists = res.items.map(item => {
-
                     return {
                         name: item.name,
                         id: item.id,
@@ -52,13 +48,12 @@ class LoggedIn extends Component {
                     }
                 })
                 this.setState({ playlists })
-                if(this.state.showDefaultList==true){
+                if (this.state.showDefaultList == true) {
                     this.getCurPlaylist(playlists[0].id);
-                    this.setState({showDefaultList:false})
+                    this.setState({ showDefaultList: false })
                 }
-
             })
-            .catch(e => console.log(e));
+            .catch(err => console.log('an error occured'))
     }
 
     getCurPlaylist = (playListId) => {
@@ -74,33 +69,27 @@ class LoggedIn extends Component {
         })
         this.setState({ playlists })
 
-        //get tracks 
-        const url = `https://api.spotify.com/v1/playlists/${playListId}/tracks`;
-        fetch(url, {
-            headers: {
-                'Authorization': 'Bearer ' + this.props.accessToken
-            }
-        })
-            .then(res => res.json())
-            .then(res => {
-                let currentPlaylist = res.items.map(item => {
-                    let bg = 'info'
-                    const newPlaylist_i =
-                        this.state.newPlaylist.findIndex(track => track.id === item.track.id);
-                    if (newPlaylist_i !== -1) {
-                        bg = 'dark'
-                    }
-                    return {
-                        name: item.track.name,
-                        artist: item.track.artists[0].name,
-                        spotifyURI: item.track.uri,
-                        id: item.track.id,
-                        externalURL: item.track.external_urls.spotify,
-                        bg
-                    }
-                })
-                this.setState({ currentPlaylist })
+        spotifyWebApi.getPlaylistTracks(playListId)
+        .then(res => {
+            let currentPlaylist = res.items.map(item => {
+                let bg = 'info'
+                const newPlaylist_i =
+                    this.state.newPlaylist.findIndex(track => track.id === item.track.id);
+                if (newPlaylist_i !== -1) {
+                    bg = 'dark'
+                }
+                return {
+                    name: item.track.name,
+                    artist: item.track.artists[0].name,
+                    spotifyURI: item.track.uri,
+                    id: item.track.id,
+                    externalURL: item.track.external_urls.spotify,
+                    bg
+                }
             })
+            this.setState({ currentPlaylist })
+        })
+        .catch(err => console.log('an error has occured'))
     }
 
     addTrackHandler = (newTrack, i) => {
@@ -165,47 +154,39 @@ class LoggedIn extends Component {
             })
         }
 
-        fetch(url, options)
-            .then(playlist => playlist.json())
-            .then(playlist => {
-                //2.) add tracks to the playlist
-                url = `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?`
-                const uriList = this.state.newPlaylist.map(track => track.spotifyURI)
-                options = {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + this.props.accessToken,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        'uris': uriList
-                    })
-                }
-                fetch(url, options)
-                    .then(res => {
-                        if (res.status === 201) {
-                            alert('A new playlist was created')
-                            this.setState({ newPlaylist: [] })
-                            this.getUserPlaylists();
-                        } else {
-                            //Delete created empty playlist
-                            alert('Sorry, an error occured. could not create a new playlist')
-                            url = `https://api.spotify.com/v1/playlists/${playlist.id}/followers`
-                            options = {
-                                method: 'DELETE',
-                                headers: {
-                                    'Authorization': 'Bearer ' + this.props.accessToken,
-                                }
-                            }
-                            fetch(url, options);
-                        }
-                    })
-                    .catch(e => console.log(e));
+        spotifyWebApi.createPlaylist(this.state.userId, options)
+        .then(playlist => {
+            const uriList = this.state.newPlaylist.map(track => track.spotifyURI)
+            options = {
+
+                'uris': uriList
+
             }
-            )
+            spotifyWebApi.addTracksToPlaylist(playlist.id, uriList)
+                .then(res => {
+                    if (res.snapshot_id) {
+                        alert('A new playlist was created')
+                        this.setState({ newPlaylist: [] })
+                        this.getUserPlaylists();
+                    }
+                    else {
+                        alert('Sorry, an error occured. could not create a new playlist')
+                        options = {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.props.accessToken,
+                            }
+                        }
+                        spotifyWebApi.unfollowPlaylist(playlist.id, options)
+
+                    }
+                }).catch(e => console.log('error'))
+        }).catch(e => console.log('error'))
+
     }
 
     componentDidMount() {
+        spotifyWebApi.setAccessToken(this.props.accessToken);
         this.getUserProfile();
         this.getUserPlaylists();
     }
