@@ -143,15 +143,11 @@ class LoggedIn extends Component {
             return;
         }
         let options = {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + this.props.accessToken,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        
+            
                 name: playlistName,
                 public: false
-            })
+            
         }
 
         spotifyWebApi.createPlaylist(this.state.userId, options)

@@ -71,7 +71,7 @@ passport.use(
         },
         function (accessToken, refreshToken, expires_in, profile, done) {
             console.log('place 1' ,profile)
-            checkUser(accessToken, profile, (err, user) => {
+            checkUser(aaccessToken, refreshToken,expires_in, profile, (err, user) => {
                 return done(null, user)
             })
         }
