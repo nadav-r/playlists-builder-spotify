@@ -36,11 +36,11 @@ function checkUser(accessToken, refreshToken,expires_in, profile, callback) {
                         {
                             id: profile.id,
                             name: profile.displayName,
-                            accessTocken: accessToken
+                            accessToken: accessToken
                         }
                     )
                     .then(res => console.log('inserted a new user'))
-                    .catch(err => console.log('failed to insert a new user'))
+                    .catch(err => console.log(err))
             }
             user = { accessToken, profile, expires_in, refreshToken }
             callback(null, user)
