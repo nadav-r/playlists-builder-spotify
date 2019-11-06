@@ -36,10 +36,7 @@ function checkUser(accessToken, refreshToken,expires_in, profile, callback) {
                         {
                             id: profile.id,
                             name: profile.displayName,
-                            accessTocken: accessToken,
-                            refreshToken:refreshToken,
-                            expires_in:expires_in
-
+                            accessTocken: accessToken
                         }
                     )
                     .then(res => console.log('inserted a new user'))
@@ -56,7 +53,6 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (obj, done) {
     done(null, obj);
 });
-const app = express();
 app.use(cors());
 app.use(passport.initialize());
 
@@ -71,7 +67,7 @@ passport.use(
         },
         function (accessToken, refreshToken, expires_in, profile, done) {
             console.log('place 1' ,profile)
-            checkUser(aaccessToken, refreshToken,expires_in, profile, (err, user) => {
+            checkUser(accessToken, refreshToken,expires_in, profile, (err, user) => {
                 return done(null, user)
             })
         }
